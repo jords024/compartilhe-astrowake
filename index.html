@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Comunidade Astrowake · Faça a sua arte</title>
 <meta name="robots" content="noindex">
+<meta name="theme-color" content="#0E0C1A">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Eu faço parte da Comunidade Astrowake">
+<meta property="og:description" content="Faça a sua arte de boas-vindas em 30 segundos e conte pra todo mundo que você entrou.">
+<meta property="og:image" content="https://jords024.github.io/compartilhe-astrowake/assets/crassus.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@500;700;800&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
@@ -12,7 +17,7 @@
   :root { --ink:#15131D; --night:#0E0C1A; --amber:#E8B04A; --cream:#F5F3EC; --lav:#B6A4F0; }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { background: var(--night); color: var(--cream); font-family: 'Inter', system-ui, sans-serif; }
-  body { min-height: 100vh; background: radial-gradient(900px 600px at 15% 0%, rgba(124,107,208,.28), transparent 60%), var(--night); padding: max(22px, env(safe-area-inset-top)) 20px 60px; }
+  body { min-height: 100vh; background: radial-gradient(900px 600px at 15% 0%, rgba(124,107,208,.28), transparent 60%), var(--night); padding: max(22px, env(safe-area-inset-top)) 20px calc(60px + env(safe-area-inset-bottom)); }
   main { max-width: 520px; margin: 0 auto; }
   .eyebrow { font-weight: 700; font-size: 12px; letter-spacing: .34em; color: var(--lav); text-transform: uppercase; text-align: center; margin: 8px 0 18px; }
   h1 { font-family: 'Anton', sans-serif; font-weight: 400; font-size: clamp(44px, 13vw, 64px); line-height: 1; text-align: center; text-transform: uppercase; }
@@ -27,7 +32,7 @@
   .btn.insta { background: linear-gradient(135deg, #F5C96A, #E8B04A 40%, #E0483B); color: var(--ink); }
   .btn + .btn { margin-top: 10px; }
   input[type=text] { width: 100%; min-height: 52px; border-radius: 14px; border: 2px solid rgba(245,243,236,.25); background: rgba(0,0,0,.25); color: var(--cream); font: 600 17px 'Inter', sans-serif; padding: 0 16px; margin-bottom: 12px; }
-  input[type=file] { display: none; }
+  input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
   .screen { display: none; }
   .screen.on { display: block; animation: in .35s ease; }
   @keyframes in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
@@ -36,7 +41,7 @@
   .dots i.on { background: var(--amber); }
   .link { display: block; width: 100%; background: none; border: 0; color: var(--lav); font: 700 15px 'Inter', sans-serif; text-decoration: underline; padding: 14px; cursor: pointer; }
   .btn:disabled { opacity: .4; cursor: default; }
-  .preview { width: 100%; border-radius: 18px; overflow: hidden; background: #000; touch-action: none; box-shadow: 0 20px 50px rgba(0,0,0,.45); }
+  .preview { width: 100%; max-width: 300px; margin: 0 auto; border-radius: 18px; overflow: hidden; background: #000; touch-action: none; box-shadow: 0 20px 50px rgba(0,0,0,.45); }
   canvas { width: 100%; height: auto; display: block; cursor: grab; }
   .row { display: flex; gap: 10px; margin-top: 14px; align-items: center; }
   .row label { font-weight: 700; font-size: 14px; color: var(--lav); flex: none; }
@@ -50,10 +55,16 @@
   .ok { text-align: center; color: var(--amber); font-weight: 800; margin-bottom: 12px; display: none; }
   .ok.on { display: block; }
   footer { text-align: center; font-size: 12px; color: rgba(245,243,236,.45); margin-top: 22px; }
+  #ov { position: fixed; inset: 0; z-index: 50; background: rgba(8,6,16,.97); overflow: auto; padding: 18px 18px 40px; text-align: center; }
+  #ov p { font-weight: 800; font-size: 18px; line-height: 1.4; margin: 6px 0 14px; }
+  #ov p b { color: var(--amber); }
+  #ov img { width: 100%; max-width: 380px; border-radius: 14px; display: block; margin: 0 auto 18px; -webkit-touch-callout: default; user-select: auto; }
+  #inapp { background: rgba(232,176,74,.14); border: 1.5px solid rgba(232,176,74,.5); border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; font-size: 14px; line-height: 1.4; }
 </style>
 </head>
 <body>
 <main>
+  <div id="inapp" hidden>Se o botão de baixar não funcionar, você está dentro do navegador de um aplicativo. Toque nos três pontinhos e escolha <b>Abrir no Chrome</b> ou <b>Abrir no Safari</b>.</div>
   <div class="eyebrow">Astrologia &amp; Comunidade</div>
   <div class="dots" id="dots"><i></i><i></i><i></i></div>
   <h1 id="hello">Boas-vindas<br><em>à comunidade</em></h1>
@@ -67,20 +78,22 @@
 
   <section class="step screen" id="s2">
     <div class="t"><span class="n">2</span>Escolha a sua melhor foto</div>
-    <label class="btn primary" for="file">Escolher foto</label>
-    <input id="file" type="file" accept="image/*">
-    <p class="hint">A foto fica <b>só no seu aparelho</b>. Nada é enviado para lugar nenhum.</p>
+    <label class="btn primary" for="file">Escolher da galeria</label>
+    <input id="file" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif">
+    <label class="btn ghost" for="selfie">Tirar uma selfie agora</label>
+    <input id="selfie" type="file" accept="image/*" capture="user">
+    <p class="hint" id="pickHint">A foto fica <b>só no seu aparelho</b>. Nada é enviado para lugar nenhum.</p>
   </section>
 
   <section class="step screen" id="s3">
     <div class="t"><span class="n">3</span>Ajuste, baixe e publique</div>
     <div class="preview"><canvas id="cv" width="1080" height="1920"></canvas></div>
-    <p class="hint">Arraste a foto para enquadrar o rosto.</p>
+    <p class="hint">Arraste a foto ou use os controles abaixo para enquadrar o rosto.</p>
     <div class="row"><label for="zoom">Zoom</label><input id="zoom" type="range" min="1" max="3" step="0.01" value="1"></div>
+    <div class="row"><label for="posy">Posição</label><input id="posy" type="range" min="-100" max="100" step="1" value="0"></div>
     <div class="seg" id="seg"><button data-th="dark" class="on">Escuro</button><button data-th="amber">Âmbar</button></div>
     <div style="margin-top:18px">
       <button class="btn primary" id="dl">Baixar minha arte</button>
-      <button class="btn ghost" id="share" hidden>Compartilhar direto</button>
       <div class="ok" id="ok" style="margin-top:16px">Arte salva! Agora é só publicar:</div>
       <a class="btn insta" id="insta" href="https://www.instagram.com/" hidden>Ir direto para o Instagram</a>
       <p class="hint" id="tip" hidden>No Stories, escolha a arte da galeria, toque em <b>@</b> e marque <b>@crassusastrologo</b>.</p>
@@ -92,7 +105,12 @@
       <button class="link" id="again">Trocar foto</button>
     </div>
   </section>
-  <footer>Comunidade Astrowake · @crassusastrologo</footer>
+  <div id="ov" hidden>
+  <p>Toque e <b>segure na imagem</b>, depois escolha <b>Salvar</b> (ou Baixar imagem).</p>
+  <img id="ovimg" alt="Sua arte">
+  <button class="btn primary" id="ovclose">Já salvei</button>
+</div>
+<footer>Comunidade Astrowake · @crassusastrologo</footer>
 </main>
 
 <script>
@@ -106,8 +124,10 @@
   // ---- greeting (name only on the page, never on the art)
   const cap1 = (s) => s.trim().split(/\s+/)[0].toLowerCase().replace(/^\p{L}/u, (c) => c.toUpperCase());
   const setName = (n) => {
-    nome = cap1(n || '');
-    $('hello').innerHTML = nome ? `Boas-vindas,<br><em>${nome.replace(/[<>&]/g, '')}</em>` : 'Boas-vindas<br><em>à comunidade</em>';
+    nome = cap1(n || '').slice(0, 24);
+    const h = $('hello'); h.textContent = '';
+    const em = document.createElement('em'); em.textContent = nome || 'à comunidade';
+    h.append(nome ? 'Boas-vindas,' : 'Boas-vindas', document.createElement('br'), em);
   };
   const SUBS = { 1: 'Vamos montar a sua arte em 3 passos rápidos.', 2: 'Escolha uma foto em que você gosta de aparecer.', 3: 'Confira, baixe e publique nos Stories.' };
   function go(n) {
@@ -122,12 +142,12 @@
   const nameNext = () => { if (!$('nameInput').value.trim()) return; setName($('nameInput').value); go(2); };
   $('nameOk').onclick = nameNext;
   $('nameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') nameNext(); });
-  $('again').onclick = () => { $('file').value = ''; go(2); };
+  $('again').onclick = () => { go(2); };
 
   // ---- artwork
   const P = { dark: { bg1: '#1B1630', bg2: '#0B0916', ink: '#F5F3EC', acc: '#E8B04A', mute: '#B6A4F0', frame: '#E8B04A' },
               amber: { bg1: '#F0BC5A', bg2: '#E3A334', ink: '#15131D', acc: '#15131D', mute: '#5B3A10', frame: '#15131D' } };
-  const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); };
+  const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); };
   const cover = (im, bx, by, bw, bh, z, dx, dy) => {
     const s = Math.max(bw / im.width, bh / im.height) * z;
     const w = im.width * s, h = im.height * s;
@@ -136,6 +156,8 @@
     ctx.drawImage(im, bx + (bw - w) / 2 + cx, by + (bh - h) / 2 + cy, w, h);
     return [cx, cy];
   };
+  let ready = null, tmr = null;
+  function schedule() { ready = null; clearTimeout(tmr); tmr = setTimeout(() => { try { cv.toBlob((b) => { ready = b; }, 'image/png'); } catch (_) {} }, 250); }
   function draw() {
     const c = P[theme];
     const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, c.bg1); g.addColorStop(1, c.bg2);
@@ -150,7 +172,7 @@
     const fx = 150, fy = 700, fs = 780;
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 24; rr(fx, fy, fs, fs, 56); ctx.fillStyle = '#000'; ctx.fill(); ctx.restore();
     ctx.save(); rr(fx, fy, fs, fs, 56); ctx.clip();
-    if (img) { [ox, oy] = cover(img, fx, fy, fs, fs, zoom, ox, oy); } else { ctx.fillStyle = 'rgba(128,128,128,.25)'; ctx.fillRect(fx, fy, fs, fs); }
+    if (img) { [ox, oy] = cover(img, fx, fy, fs, fs, zoom, ox, oy); $('posy').value = Math.max(-100, Math.min(100, Math.round(oy / 4))); } else { ctx.fillStyle = 'rgba(128,128,128,.25)'; ctx.fillRect(fx, fy, fs, fs); }
     ctx.restore();
     ctx.lineWidth = 8; ctx.strokeStyle = c.frame; rr(fx, fy, fs, fs, 56); ctx.stroke();
     // footer: Crassus + handle
@@ -163,24 +185,44 @@
     }
     ctx.textAlign = 'left'; ctx.fillStyle = c.mute; ctx.font = 'italic 46px "Instrument Serif", serif'; ctx.fillText('com Crassus Gobbi', 350, cy - 12);
     ctx.fillStyle = c.ink; ctx.font = '800 44px Inter, sans-serif'; ctx.fillText('@crassusastrologo', 350, cy + 44);
+    schedule();
   }
 
-  // ---- photo input (respects EXIF orientation)
-  $('file').onchange = async (e) => {
-    const f = e.target.files[0]; if (!f) return;
-    try { img = await createImageBitmap(f, { imageOrientation: 'from-image' }); }
-    catch (_) { img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(f); }); }
-    zoom = 1; ox = oy = 0; $('zoom').value = 1;
-    go(3);
-    await document.fonts.ready; draw();
+  // ---- photo input (EXIF orientation, big photos shrunk, only the first file, friendly errors)
+  const shrink = (src) => {
+    const m = Math.max(src.width, src.height);
+    if (m <= 2400) return src;
+    const k = 2400 / m, c = document.createElement('canvas');
+    c.width = Math.round(src.width * k); c.height = Math.round(src.height * k);
+    c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+    if (src.close) src.close();
+    return c;
   };
+  async function loadFile(f) {
+    if (!f) return;
+    if (f.type && !/^image\//.test(f.type)) { alert('Escolha uma foto (JPG ou PNG).'); return; }
+    $('pickHint').textContent = 'Abrindo a sua foto…';
+    let im = null;
+    try { im = await createImageBitmap(f, { imageOrientation: 'from-image' }); }
+    catch (_) { try { im = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(f); }); } catch (__) {} }
+    $('pickHint').innerHTML = 'A foto fica <b>só no seu aparelho</b>. Nada é enviado para lugar nenhum.';
+    if (!im) { alert('Não consegui abrir essa foto. Escolha outra, em JPG ou PNG.'); return; }
+    img = shrink(im); zoom = 1; ox = oy = 0; $('zoom').value = 1; $('posy').value = 0;
+    go(3);
+    try { await document.fonts.ready; } catch (_) {}
+    draw();
+  }
+  const onPick = (e) => { const list = Array.from(e.target.files || []); const first = list[0]; e.target.value = ''; loadFile(first); };
+  $('file').onchange = onPick;
+  $('selfie').onchange = onPick;
   $('zoom').oninput = (e) => { zoom = parseFloat(e.target.value); draw(); };
+  $('posy').oninput = (e) => { oy = parseFloat(e.target.value) * 4; draw(); };
   $('seg').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; theme = b.dataset.th; [...$('seg').children].forEach((x) => x.classList.toggle('on', x === b)); draw(); };
 
   // ---- drag to frame
   let drag = null;
   const pt = (e) => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * (W / r.width), y: (e.clientY - r.top) * (H / r.height) }; };
-  cv.addEventListener('pointerdown', (e) => { if (!img) return; cv.setPointerCapture(e.pointerId); const p = pt(e); drag = { x: p.x, y: p.y, ox, oy }; cv.style.cursor = 'grabbing'; });
+  cv.addEventListener('pointerdown', (e) => { if (!img) return; try { cv.setPointerCapture(e.pointerId); } catch (_) {} const p = pt(e); drag = { x: p.x, y: p.y, ox, oy }; cv.style.cursor = 'grabbing'; });
   cv.addEventListener('pointermove', (e) => { if (!drag) return; const p = pt(e); ox = drag.ox + (p.x - drag.x); oy = drag.oy + (p.y - drag.y); draw(); });
   const end = () => { drag = null; cv.style.cursor = 'grab'; };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
@@ -189,14 +231,23 @@
   const blob = () => new Promise((res, rej) => { try { cv.toBlob((b) => (b ? res(b) : rej(new Error('vazio'))), 'image/png'); } catch (e) { rej(e); } });
   const fname = () => `astrowake${nome ? '-' + nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') : ''}.png`;
   const after = () => { $('dl').className = 'btn ghost'; $('dl').textContent = 'Baixar de novo'; $('ok').classList.add('on'); $('insta').hidden = false; $('tip').hidden = false; $('cap').hidden = false; showCap(); };
+  const isTouch = (navigator.maxTouchPoints || 0) > 0 && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const showOverlay = (blobx) => { $('ovimg').src = URL.createObjectURL(blobx); $('ov').hidden = false; };
+  $('ovclose').onclick = () => { $('ov').hidden = true; };
   $('dl').onclick = async () => {
-    draw(); let b; try { b = await blob(); } catch (e) { alert('Não consegui gerar a imagem neste navegador. Abra este link no Chrome ou no Safari do celular.'); return; } const a = document.createElement('a');
+    let b = ready;
+    if (!b) { draw(); try { b = await blob(); } catch (e) { alert('Não consegui gerar a imagem neste navegador. Abra este link no Chrome ou no Safari do celular.'); return; } }
+    const file = new File([b], fname(), { type: 'image/png' });
+    if (isTouch && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file] }); after(); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    if (isTouch) { showOverlay(b); after(); return; }
+    const a = document.createElement('a');
     a.href = URL.createObjectURL(b); a.download = fname(); document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
     after();
   };
-  const canShareFiles = () => { try { return !!navigator.canShare && navigator.canShare({ files: [new File([''], 'a.png', { type: 'image/png' })] }); } catch (_) { return false; } };
-  if (canShareFiles()) $('share').hidden = false;
-  $('share').onclick = async () => { draw(); const b = await blob(); try { await navigator.share({ files: [new File([b], fname(), { type: 'image/png' })], text: caps[ci] }); after(); } catch (_) {} };
+  if (/Instagram|FBAN|FBAV|WhatsApp|Line\//i.test(navigator.userAgent)) $('inapp').hidden = false;
   $('insta').onclick = (e) => {
     e.preventDefault();
     const t = Date.now(); location.href = 'instagram://story-camera';
@@ -212,7 +263,13 @@
   let ci = 0;
   const showCap = () => { $('capText').textContent = caps[ci]; };
   $('other').onclick = () => { ci = (ci + 1) % caps.length; showCap(); };
-  $('copy').onclick = async () => { try { await navigator.clipboard.writeText(caps[ci]); $('copy').textContent = 'Legenda copiada'; setTimeout(() => ($('copy').textContent = 'Copiar legenda'), 1800); } catch (_) {} };
+  $('copy').onclick = async () => {
+    let ok = false;
+    try { await navigator.clipboard.writeText(caps[ci]); ok = true; } catch (_) {}
+    if (!ok) { try { const t = document.createElement('textarea'); t.value = caps[ci]; t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); ok = document.execCommand('copy'); t.remove(); } catch (_) {} }
+    $('copy').textContent = ok ? 'Legenda copiada' : 'Segure no texto acima para copiar';
+    setTimeout(() => ($('copy').textContent = 'Copiar legenda'), 2200);
+  };
 
   // initial empty preview
   Promise.all([document.fonts.load('132px Anton'), document.fonts.load('italic 62px "Instrument Serif"'), document.fonts.load('800 44px Inter'), new Promise((r) => (crassus.complete ? r() : (crassus.onload = r))).catch(() => {})]).then(draw);
