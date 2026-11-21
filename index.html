@@ -86,8 +86,6 @@
     <label class="btn ghost" for="selfie">Tirar uma selfie agora</label>
     <input id="selfie" type="file" accept="image/*" capture="user">
     <p class="hint" id="pickHint">A foto fica <b>só no seu aparelho</b>. Nada é enviado para lugar nenhum.</p>
-    <div class="tip" id="chromeTip" hidden><b>Abriu pelo WhatsApp ou Instagram?</b> Se a galeria abrir com tudo marcado ou algo não funcionar, toque nos <b>três pontinhos ⋮</b> e escolha <b>Abrir no Chrome</b> (ou <b>Abrir no Safari</b>).
-      <button class="btn ghost" id="openChrome" hidden style="margin-top:10px;min-height:46px">Abrir no Chrome</button></div>
   </section>
 
   <section class="step screen" id="s3">
@@ -151,7 +149,20 @@
   const qs = new URLSearchParams(location.search);
   if (qs.get('nome')) { setName(qs.get('nome')); go(2); } else go(1);
   $('nameInput').addEventListener('input', () => { $('nameOk').disabled = !$('nameInput').value.trim(); });
-  const nameNext = () => { if (!$('nameInput').value.trim()) return; setName($('nameInput').value); go(2); };
+  // Links opened from WhatsApp land in its in-app browser (broken gallery / no downloads). On Android, a tap can hand the page to the
+  // default browser through an intent; if that is blocked or cancelled the page just continues here.
+  const intentUrl = () => {
+    const u = new URL(location.href); u.searchParams.set('ab', '1'); if (nome) u.searchParams.set('nome', nome);
+    return 'intent://' + u.host + u.pathname + u.search + '#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=' + encodeURIComponent(u.href) + ';end';
+  };
+  window.__intentUrl = intentUrl;
+  const escapeToBrowser = () => {
+    if (!/Android/i.test(navigator.userAgent) || qs.has('ab') || /^https?:/i.test(document.referrer)) return false;
+    location.href = intentUrl();
+    setTimeout(() => { if (!document.hidden) go(2); }, 1500);
+    return true;
+  };
+  const nameNext = () => { const v = $('nameInput').value.trim(); if (!v) return; setName(v); if (!escapeToBrowser()) go(2); };
   $('nameOk').onclick = nameNext;
   $('nameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') nameNext(); });
   $('again').onclick = () => { go(2); };
@@ -226,7 +237,7 @@
   }
   const onPick = (e) => {
     const list = Array.from(e.target.files || []); e.target.value = '';
-    if (list.length > 1) { alert('Foram selecionadas ' + list.length + ' fotos. Escolha apenas UMA foto. Se a galeria abrir com tudo marcado, abra esta página no Chrome (três pontinhos > Abrir no Chrome).'); return; }
+    if (list.length > 1) { alert('Foram selecionadas ' + list.length + ' fotos. Escolha apenas UMA foto. Toque em uma foto só.'); return; }
     loadFile(list[0]);
   };
   $('file').onchange = onPick;
@@ -269,11 +280,6 @@
     setTimeout(() => URL.revokeObjectURL(a.href), 60000);
     after();
   };
-  if (isMobile) { $('chromeTip').hidden = false; if (isAndroid) $('openChrome').hidden = false; }
-  $('openChrome').onclick = () => {
-    const u = location.href.replace(/^https?:\/\//, '');
-    location.href = 'intent://' + u + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(location.href) + ';end';
-  };
   $('insta').onclick = (e) => {
     e.preventDefault();
     $('instaHint').hidden = false;
@@ -296,6 +302,10 @@
     $('copy').textContent = ok ? 'Legenda copiada' : 'Segure no texto acima para copiar';
     setTimeout(() => ($('copy').textContent = 'Copiar legenda'), 2200);
   };
+
+  // opened from WhatsApp (Android)? try to hand the page to the device's default browser right away, with no message.
+  // (If the system blocks it without a tap, the first "Continuar" tap does the same.)
+  if (/Android/i.test(navigator.userAgent) && !qs.has('ab') && !/^https?:/i.test(document.referrer)) { try { location.replace(intentUrl()); } catch (_) {} }
 
   // initial empty preview
   Promise.all([document.fonts.load('132px Anton'), document.fonts.load('italic 62px "Instrument Serif"'), document.fonts.load('800 44px Inter'), new Promise((r) => (crassus.complete ? r() : (crassus.onload = r))).catch(() => {})]).then(draw);
