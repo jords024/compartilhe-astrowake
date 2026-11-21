@@ -41,8 +41,9 @@
   .dots i.on { background: var(--amber); }
   .link { display: block; width: 100%; background: none; border: 0; color: var(--lav); font: 700 15px 'Inter', sans-serif; text-decoration: underline; padding: 14px; cursor: pointer; }
   .btn:disabled { opacity: .4; cursor: default; }
-  .preview { width: 100%; max-width: 300px; margin: 0 auto; border-radius: 18px; overflow: hidden; background: #000; touch-action: none; box-shadow: 0 20px 50px rgba(0,0,0,.45); }
-  canvas { width: 100%; height: auto; display: block; cursor: grab; }
+  .preview { width: 100%; max-width: 300px; margin: 0 auto; border-radius: 18px; overflow: hidden; background: #000; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,.45); }
+  canvas { width: 100%; height: auto; display: block; }
+  #hit { position: absolute; left: 13.889%; top: 36.458%; width: 72.222%; height: 40.625%; touch-action: none; cursor: grab; }
   .row { display: flex; gap: 10px; margin-top: 14px; align-items: center; }
   .row label { font-weight: 700; font-size: 14px; color: var(--lav); flex: none; }
   input[type=range] { flex: 1; accent-color: var(--amber); height: 36px; }
@@ -87,14 +88,14 @@
 
   <section class="step screen" id="s3">
     <div class="t"><span class="n">3</span>Ajuste, baixe e publique</div>
-    <div class="preview"><canvas id="cv" width="1080" height="1920"></canvas></div>
-    <p class="hint">Arraste a foto ou use os controles abaixo para enquadrar o rosto.</p>
+    <div class="preview"><canvas id="cv" width="1080" height="1920"></canvas><div id="hit"></div></div>
+    <p class="hint">Arraste a foto <b>dentro do quadrado</b> ou use os controles abaixo para enquadrar o rosto.</p>
     <div class="row"><label for="zoom">Zoom</label><input id="zoom" type="range" min="1" max="3" step="0.01" value="1"></div>
     <div class="row"><label for="posy">Posição</label><input id="posy" type="range" min="-100" max="100" step="1" value="0"></div>
     <div class="seg" id="seg"><button data-th="dark" class="on">Escuro</button><button data-th="amber">Âmbar</button></div>
     <div style="margin-top:18px">
       <button class="btn primary" id="dl">Baixar minha arte</button>
-      <div class="ok" id="ok" style="margin-top:16px">Arte salva! Agora é só publicar:</div>
+      <div class="ok" id="ok" style="margin-top:16px">Pronto! Sua arte foi baixada. Agora é só publicar:</div>
       <a class="btn insta" id="insta" href="https://www.instagram.com/" hidden>Ir direto para o Instagram</a>
       <p class="hint" id="tip" hidden>No Stories, escolha a arte da galeria, toque em <b>@</b> e marque <b>@crassusastrologo</b>.</p>
       <div class="cap" id="cap" hidden>
@@ -102,6 +103,8 @@
         <button class="btn ghost" id="copy" style="margin-top:12px;min-height:48px">Copiar legenda</button>
         <button class="btn ghost" id="other" style="min-height:48px">Outra legenda</button>
       </div>
+      <button class="btn ghost" id="share" hidden>Compartilhar a imagem</button>
+      <button class="link" id="alt" hidden>Não baixou? Toque aqui para salvar pela imagem</button>
       <button class="link" id="again">Trocar foto</button>
     </div>
   </section>
@@ -222,32 +225,43 @@
   // ---- drag to frame
   let drag = null;
   const pt = (e) => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * (W / r.width), y: (e.clientY - r.top) * (H / r.height) }; };
-  cv.addEventListener('pointerdown', (e) => { if (!img) return; try { cv.setPointerCapture(e.pointerId); } catch (_) {} const p = pt(e); drag = { x: p.x, y: p.y, ox, oy }; cv.style.cursor = 'grabbing'; });
-  cv.addEventListener('pointermove', (e) => { if (!drag) return; const p = pt(e); ox = drag.ox + (p.x - drag.x); oy = drag.oy + (p.y - drag.y); draw(); });
-  const end = () => { drag = null; cv.style.cursor = 'grab'; };
-  cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+  const hit = $('hit');
+  hit.addEventListener('pointerdown', (e) => { if (!img) return; try { hit.setPointerCapture(e.pointerId); } catch (_) {} const p = pt(e); drag = { x: p.x, y: p.y, ox, oy }; hit.style.cursor = 'grabbing'; });
+  hit.addEventListener('pointermove', (e) => { if (!drag) return; const p = pt(e); ox = drag.ox + (p.x - drag.x); oy = drag.oy + (p.y - drag.y); draw(); });
+  const end = () => { drag = null; hit.style.cursor = 'grab'; };
+  hit.addEventListener('pointerup', end); hit.addEventListener('pointercancel', end);
 
   // ---- download + Instagram
   const blob = () => new Promise((res, rej) => { try { cv.toBlob((b) => (b ? res(b) : rej(new Error('vazio'))), 'image/png'); } catch (e) { rej(e); } });
   const fname = () => `astrowake${nome ? '-' + nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') : ''}.png`;
   const after = () => { $('dl').className = 'btn ghost'; $('dl').textContent = 'Baixar de novo'; $('ok').classList.add('on'); $('insta').hidden = false; $('tip').hidden = false; $('cap').hidden = false; showCap(); };
-  const isTouch = (navigator.maxTouchPoints || 0) > 0 && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const ua = navigator.userAgent;
+  const inApp = /Instagram|FBAN|FBAV|WhatsApp|Line\//i.test(ua);
+  const isIOS = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/i.test(ua) && (navigator.maxTouchPoints || 0) > 1);
+  let lastBlob = null;
   const showOverlay = (blobx) => { $('ovimg').src = URL.createObjectURL(blobx); $('ov').hidden = false; };
   $('ovclose').onclick = () => { $('ov').hidden = true; };
+  $('alt').textContent = isIOS ? 'Quer salvar nas Fotos? Toque aqui' : 'Não baixou? Toque aqui para salvar pela imagem';
+  $('alt').onclick = () => { if (lastBlob) showOverlay(lastBlob); };
+  $('share').onclick = async () => {
+    if (!lastBlob) return;
+    try { await navigator.share({ files: [new File([lastBlob], fname(), { type: 'image/png' })] }); } catch (_) {}
+  };
+  const after2 = () => {
+    after(); $('alt').hidden = false;
+    try { if (navigator.canShare && navigator.canShare({ files: [new File([lastBlob], 'a.png', { type: 'image/png' })] })) $('share').hidden = false; } catch (_) {}
+  };
   $('dl').onclick = async () => {
     let b = ready;
-    if (!b) { draw(); try { b = await blob(); } catch (e) { alert('Não consegui gerar a imagem neste navegador. Abra este link no Chrome ou no Safari do celular.'); return; } }
-    const file = new File([b], fname(), { type: 'image/png' });
-    if (isTouch && navigator.canShare && navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ files: [file] }); after(); return; }
-      catch (e) { if (e && e.name === 'AbortError') return; }
-    }
-    if (isTouch) { showOverlay(b); after(); return; }
+    if (!b) { draw(); try { b = await blob(); } catch (e) { alert('Não consegui gerar a imagem neste navegador. Abra este link no Chrome ou no Safari.'); return; } }
+    lastBlob = b;
+    if (inApp) { showOverlay(b); after2(); return; }
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(b); a.download = fname(); document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-    after();
+    a.href = URL.createObjectURL(b); a.download = fname(); a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    after2();
   };
-  if (/Instagram|FBAN|FBAV|WhatsApp|Line\//i.test(navigator.userAgent)) $('inapp').hidden = false;
+  if (inApp) $('inapp').hidden = false;
   $('insta').onclick = (e) => {
     e.preventDefault();
     const t = Date.now(); location.href = 'instagram://story-camera';
