@@ -59,13 +59,15 @@
   #ov { position: fixed; inset: 0; z-index: 50; background: rgba(8,6,16,.97); overflow: auto; padding: 18px 18px 40px; text-align: center; }
   #ov p { font-weight: 800; font-size: 18px; line-height: 1.4; margin: 6px 0 14px; }
   #ov p b { color: var(--amber); }
-  #ov img { width: 100%; max-width: 380px; border-radius: 14px; display: block; margin: 0 auto 18px; -webkit-touch-callout: default; user-select: auto; }
+  #ov img { width: 100%; max-width: 270px; border-radius: 14px; display: block; margin: 0 auto 18px; -webkit-touch-callout: default; user-select: auto; }
+  .tip { background: rgba(232,176,74,.14); border: 1.5px solid rgba(232,176,74,.5); border-radius: 14px; padding: 12px 14px; margin-top: 14px; font-size: 14px; line-height: 1.45; }
+  .steps { text-align: left; font-size: 16px; line-height: 1.5; margin: 0 auto 16px; max-width: 380px; }
+  .steps li { margin: 6px 0 6px 20px; }
   #inapp { background: rgba(232,176,74,.14); border: 1.5px solid rgba(232,176,74,.5); border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; font-size: 14px; line-height: 1.4; }
 </style>
 </head>
 <body>
 <main>
-  <div id="inapp" hidden>Se o botão de baixar não funcionar, você está dentro do navegador de um aplicativo. Toque nos três pontinhos e escolha <b>Abrir no Chrome</b> ou <b>Abrir no Safari</b>.</div>
   <div class="eyebrow">Astrologia &amp; Comunidade</div>
   <div class="dots" id="dots"><i></i><i></i><i></i></div>
   <h1 id="hello">Boas-vindas<br><em>à comunidade</em></h1>
@@ -84,6 +86,8 @@
     <label class="btn ghost" for="selfie">Tirar uma selfie agora</label>
     <input id="selfie" type="file" accept="image/*" capture="user">
     <p class="hint" id="pickHint">A foto fica <b>só no seu aparelho</b>. Nada é enviado para lugar nenhum.</p>
+    <div class="tip" id="chromeTip" hidden><b>Abriu pelo WhatsApp ou Instagram?</b> Se a galeria abrir com tudo marcado ou algo não funcionar, toque nos <b>três pontinhos ⋮</b> e escolha <b>Abrir no Chrome</b> (ou <b>Abrir no Safari</b>).
+      <button class="btn ghost" id="openChrome" hidden style="margin-top:10px;min-height:46px">Abrir no Chrome</button></div>
   </section>
 
   <section class="step screen" id="s3">
@@ -95,23 +99,28 @@
     <div class="seg" id="seg"><button data-th="dark" class="on">Escuro</button><button data-th="amber">Âmbar</button></div>
     <div style="margin-top:18px">
       <button class="btn primary" id="dl">Baixar minha arte</button>
-      <div class="ok" id="ok" style="margin-top:16px">Pronto! Sua arte foi baixada. Agora é só publicar:</div>
-      <a class="btn insta" id="insta" href="https://www.instagram.com/" hidden>Ir direto para o Instagram</a>
+      <div class="ok" id="ok" style="margin-top:16px">Pronto! Agora é só publicar:</div>
+      <a class="btn insta" id="insta" href="#" hidden>Ir direto para o Instagram</a>
+      <p class="hint" id="instaHint" hidden>Se o Instagram não abrir, abra o app, toque em <b>+</b>, escolha <b>Story</b> e selecione a arte.</p>
       <p class="hint" id="tip" hidden>No Stories, escolha a arte da galeria, toque em <b>@</b> e marque <b>@crassusastrologo</b>.</p>
       <div class="cap" id="cap" hidden>
         <div id="capText"></div>
         <button class="btn ghost" id="copy" style="margin-top:12px;min-height:48px">Copiar legenda</button>
         <button class="btn ghost" id="other" style="min-height:48px">Outra legenda</button>
       </div>
-      <button class="btn ghost" id="share" hidden>Compartilhar a imagem</button>
       <button class="link" id="alt" hidden>Não baixou? Toque aqui para salvar pela imagem</button>
       <button class="link" id="again">Trocar foto</button>
     </div>
   </section>
   <div id="ov" hidden>
-  <p>Toque e <b>segure na imagem</b>, depois escolha <b>Salvar</b> (ou Baixar imagem).</p>
+  <p>Salve a sua arte:</p>
+  <ol class="steps">
+    <li><b>Toque e segure na imagem</b> e escolha <b>Baixar imagem</b> ou <b>Salvar nas Fotos</b>.</li>
+    <li>Se o menu não aparecer, use o botão <b>Compartilhar</b> abaixo.</li>
+  </ol>
   <img id="ovimg" alt="Sua arte">
-  <button class="btn primary" id="ovclose">Já salvei</button>
+  <button class="btn ghost" id="ovshare" hidden style="margin-bottom:10px">Compartilhar ou enviar direto</button>
+  <button class="btn primary" id="ovclose">Já salvei a imagem</button>
 </div>
 <footer>Comunidade Astrowake · @crassusastrologo</footer>
 </main>
@@ -215,7 +224,11 @@
     try { await document.fonts.ready; } catch (_) {}
     draw();
   }
-  const onPick = (e) => { const list = Array.from(e.target.files || []); const first = list[0]; e.target.value = ''; loadFile(first); };
+  const onPick = (e) => {
+    const list = Array.from(e.target.files || []); e.target.value = '';
+    if (list.length > 1) { alert('Foram selecionadas ' + list.length + ' fotos. Escolha apenas UMA foto. Se a galeria abrir com tudo marcado, abra esta página no Chrome (três pontinhos > Abrir no Chrome).'); return; }
+    loadFile(list[0]);
+  };
   $('file').onchange = onPick;
   $('selfie').onchange = onPick;
   $('zoom').oninput = (e) => { zoom = parseFloat(e.target.value); draw(); };
@@ -234,38 +247,37 @@
   // ---- download + Instagram
   const blob = () => new Promise((res, rej) => { try { cv.toBlob((b) => (b ? res(b) : rej(new Error('vazio'))), 'image/png'); } catch (e) { rej(e); } });
   const fname = () => `astrowake${nome ? '-' + nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') : ''}.png`;
-  const after = () => { $('dl').className = 'btn ghost'; $('dl').textContent = 'Baixar de novo'; $('ok').classList.add('on'); $('insta').hidden = false; $('tip').hidden = false; $('cap').hidden = false; showCap(); };
+  const after = () => { $('dl').className = 'btn ghost'; $('dl').textContent = isMobile ? 'Ver a arte de novo' : 'Baixar de novo'; $('ok').classList.add('on'); $('alt').hidden = false; $('insta').hidden = false; $('tip').hidden = false; $('cap').hidden = false; showCap(); };
   const ua = navigator.userAgent;
-  const inApp = /Instagram|FBAN|FBAV|WhatsApp|Line\//i.test(ua);
+  const isAndroid = /Android/i.test(ua);
   const isIOS = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/i.test(ua) && (navigator.maxTouchPoints || 0) > 1);
-  let lastBlob = null;
-  const showOverlay = (blobx) => { $('ovimg').src = URL.createObjectURL(blobx); $('ov').hidden = false; };
-  $('ovclose').onclick = () => { $('ov').hidden = true; };
-  $('alt').textContent = isIOS ? 'Quer salvar nas Fotos? Toque aqui' : 'Não baixou? Toque aqui para salvar pela imagem';
+  const isMobile = isAndroid || isIOS;
+  let lastBlob = null, lastFile = null;
+  const canShare = () => { try { return !!(navigator.canShare && lastFile && navigator.canShare({ files: [lastFile] })); } catch (_) { return false; } };
+  const showOverlay = (blobx) => { $('ovimg').src = URL.createObjectURL(blobx); $('ovshare').hidden = !canShare(); $('ov').hidden = false; };
+  $('ovclose').onclick = () => { $('ov').hidden = true; after(); };
+  $('ovshare').onclick = async () => { try { await navigator.share({ files: [lastFile] }); $('ov').hidden = true; after(); } catch (_) {} };
+  $('alt').textContent = 'Salvar de novo? Toque aqui';
   $('alt').onclick = () => { if (lastBlob) showOverlay(lastBlob); };
-  $('share').onclick = async () => {
-    if (!lastBlob) return;
-    try { await navigator.share({ files: [new File([lastBlob], fname(), { type: 'image/png' })] }); } catch (_) {}
-  };
-  const after2 = () => {
-    after(); $('alt').hidden = false;
-    try { if (navigator.canShare && navigator.canShare({ files: [new File([lastBlob], 'a.png', { type: 'image/png' })] })) $('share').hidden = false; } catch (_) {}
-  };
   $('dl').onclick = async () => {
     let b = ready;
     if (!b) { draw(); try { b = await blob(); } catch (e) { alert('Não consegui gerar a imagem neste navegador. Abra este link no Chrome ou no Safari.'); return; } }
-    lastBlob = b;
-    if (inApp) { showOverlay(b); after2(); return; }
+    lastBlob = b; lastFile = new File([b], fname(), { type: 'image/png' });
+    if (isMobile) { showOverlay(b); return; }
     const a = document.createElement('a');
     a.href = URL.createObjectURL(b); a.download = fname(); a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 60000);
-    after2();
+    after();
   };
-  if (inApp) $('inapp').hidden = false;
+  if (isMobile) { $('chromeTip').hidden = false; if (isAndroid) $('openChrome').hidden = false; }
+  $('openChrome').onclick = () => {
+    const u = location.href.replace(/^https?:\/\//, '');
+    location.href = 'intent://' + u + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(location.href) + ';end';
+  };
   $('insta').onclick = (e) => {
     e.preventDefault();
-    const t = Date.now(); location.href = 'instagram://story-camera';
-    setTimeout(() => { if (!document.hidden && Date.now() - t < 2500) location.href = 'https://www.instagram.com/'; }, 1200);
+    $('instaHint').hidden = false;
+    location.href = isAndroid ? 'intent://story-camera#Intent;scheme=instagram;package=com.instagram.android;end' : 'instagram://story-camera';
   };
 
   // ---- captions
